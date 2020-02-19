@@ -30,7 +30,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
-	router.HandleFunc("/login", auth.Login()).Methods(http.MethodPost)
+	router.HandleFunc("/login", auth.Login(db)).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
 	fmt.Println("Listening on port", PORT)
 	http.ListenAndServe(":"+PORT, router)
