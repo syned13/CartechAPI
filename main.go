@@ -22,14 +22,16 @@ func init() {
 func main() {
 
 	connectionString := os.Getenv("DB_CONNECTION")
-	_, err := sql.Open("postgres", connectionString)
+	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		log.Fatal("could_not_open_db: ", err)
 	}
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/", auth.Index())
+	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
+	router.HandleFunc("/login", auth.Login()).Methods(http.MethodPost)
+	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
 	fmt.Println("Listening on port", PORT)
 	http.ListenAndServe(":"+PORT, router)
 
