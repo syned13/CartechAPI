@@ -13,10 +13,11 @@ import (
 	"github.com/subosito/gotenv"
 )
 
-const PORT = "5000"
+var port string
 
 func init() {
 	gotenv.Load()
+	port = os.Getenv("PORT")
 }
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
 	router.HandleFunc("/login", auth.Login(db)).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
-	fmt.Println("Listening on port", PORT)
-	http.ListenAndServe(":"+PORT, router)
+	fmt.Println("Listening on port", port)
+	http.ListenAndServe(":"+port, router)
 
 }
