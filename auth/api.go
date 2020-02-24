@@ -88,8 +88,16 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		user.Password = ""
+		marshalledUser, _ := json.Marshal(user)
+
+		var responseMap map[string]interface{}
+
+		_ = json.Unmarshal(marshalledUser, &responseMap)
+		responseMap["token"] = signedToken
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"token": signedToken})
+		json.NewEncoder(w).Encode(responseMap)
 	}
 }
 
