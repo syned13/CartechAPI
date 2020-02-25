@@ -81,7 +81,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 			"iat":     now.String(),
 		})
 
-		signedToken, err := token.SignedString([]byte(tokenSigningKey))
+		signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
 		if err != nil {
 			fmt.Println("error_signing_token: " + err.Error())
 			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")

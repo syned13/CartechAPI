@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/CartechAPI/auth"
+	"github.com/CartechAPI/service"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/subosito/gotenv"
@@ -33,7 +34,8 @@ func main() {
 	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
 	router.HandleFunc("/login", auth.Login(db)).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
+
+	router.HandleFunc("/service", service.GetAllServices(db)).Methods(http.MethodGet)
 	fmt.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
-
 }
