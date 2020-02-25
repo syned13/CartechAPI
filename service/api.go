@@ -26,6 +26,6 @@ func GetAllServices(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
 		}
 
-		utils.RespondJSON(w, http.StatusOK, serviceCategories)
+		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{"services": serviceCategories})
 	}
 }
