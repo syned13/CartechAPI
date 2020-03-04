@@ -36,6 +36,7 @@ func main() {
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
 
 	router.HandleFunc("/service", service.GetAllServices(db)).Methods(http.MethodGet)
+
 	fmt.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
 }

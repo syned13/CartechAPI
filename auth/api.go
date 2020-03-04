@@ -26,6 +26,7 @@ func init() {
 	tokenSigningKey = os.Getenv("SECRET")
 }
 
+// Index returns handler of GET / endpoint
 func Index() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hello"))
@@ -33,6 +34,7 @@ func Index() http.HandlerFunc {
 	}
 }
 
+// Login returns handler of POST /login endpoint
 func Login(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := us.User{}
@@ -110,6 +112,7 @@ func validateUniqueCredentials(db *sql.DB, user us.User) error {
 	return nil
 }
 
+// SignUp returns the handler of the POST /signup endpoint
 func SignUp(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := &us.User{}

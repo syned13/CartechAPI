@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// CreateUser creates a new user and adds it to the databse
 func CreateUser(db *sql.DB, user *usr.User) (*usr.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// GetAllServiceCategories returns all the categories of services
 func GetAllServiceCategories(db *sql.DB) ([]ServiceCategory, error) {
 	query := "SELECT * FROM service_category_table"
 	rows, err := db.Query(query)

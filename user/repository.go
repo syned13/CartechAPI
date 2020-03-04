@@ -4,6 +4,7 @@ import (
 	"database/sql"
 )
 
+// GetUserByEmail searchs for an user by its email and returns it
 func GetUserByEmail(db *sql.DB, username string) (*User, error) {
 	user := User{}
 
@@ -20,6 +21,7 @@ func GetUserByEmail(db *sql.DB, username string) (*User, error) {
 	return &user, nil
 }
 
+// InsertUser inserts a new user into the user table
 func InsertUser(db *sql.DB, user *User) (*User, error) {
 	query := "INSERT INTO user_table (name, last_name, email, password, phone_number) VALUES($1, $2, $3, $4, $5) RETURNING user_id;"
 	err := db.QueryRow(query, user.Name, user.LastName, user.Email, user.Password, user.PhoneNumber).Scan(&user.UserID)

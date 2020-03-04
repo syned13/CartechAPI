@@ -20,18 +20,21 @@ type errorResponse struct {
 	Message string `json:"message"`
 }
 
+// RespondWithError responds with a json with the given status code and message
 func RespondWithError(w http.ResponseWriter, statusCode int, errorMessage string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(errorResponse{errorMessage})
 }
 
+// RespondJSON responds with a json with the given status code and data
 func RespondJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)
 }
 
+// DecodeToken decodes the token and returns the claims
 func DecodeToken(authToken string) *usr.User {
 	token, err := jwt.Parse(authToken, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

@@ -7,6 +7,7 @@ import (
 	"github.com/CartechAPI/utils"
 )
 
+// GetAllServices returns all the mechanic services
 func GetAllServices(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header["Authorization"]
