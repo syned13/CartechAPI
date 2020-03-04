@@ -9,7 +9,6 @@ import (
 
 	us "github.com/CartechAPI/user"
 	"github.com/CartechAPI/utils"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type apiResponse struct {
@@ -65,8 +64,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword([]byte(userRetrieved.Password), []byte(user.Password))
-		if err == bcrypt.ErrMismatchedHashAndPassword {
+		if !isPasswordCorrect(user.Password, userRetrieved.Password) {
 			utils.RespondWithError(w, http.StatusBadRequest, "incorrect email or password")
 			return
 		}
@@ -86,8 +84,8 @@ func Login(db *sql.DB) http.HandlerFunc {
 		_ = json.Unmarshal(marshalledUser, &responseMap)
 		responseMap["token"] = token
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(responseMap)
+		utils.RespondJSON(w, http.StatusOK, responseMap)
+		return
 	}
 }
 

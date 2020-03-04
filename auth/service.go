@@ -43,3 +43,12 @@ func GenerateToken(user *usr.User) (string, error) {
 
 	return signedToken, nil
 }
+
+func isPasswordCorrect(enteredPassword string, storedPassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(enteredPassword), []byte(storedPassword))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false
+	}
+
+	return true
+}
