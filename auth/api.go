@@ -4,14 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	us "github.com/CartechAPI/user"
 	"github.com/CartechAPI/utils"
-	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -75,16 +72,9 @@ func Login(db *sql.DB) http.HandlerFunc {
 		}
 
 		user = *userRetrieved
-		now := time.Now()
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id": user.UserID,
-			"iat":     now.String(),
-		})
-
-		signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
+		token, err := GenerateToken(&user)
 		if err != nil {
-			fmt.Println("error_signing_token: " + err.Error())
-			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 
@@ -94,7 +84,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 		var responseMap map[string]interface{}
 
 		_ = json.Unmarshal(marshalledUser, &responseMap)
-		responseMap["token"] = signedToken
+		responseMap["token"] = token
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(responseMap)
