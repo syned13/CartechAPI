@@ -2,15 +2,21 @@ package auth
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
 	usr "github.com/CartechAPI/user"
+	"github.com/CartechAPI/utils"
 	jwt "github.com/dgrijalva/jwt-go"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+// ErrMissingToken missing token
+var ErrMissingToken = errors.New("missing token")
 
 // CreateUser creates a new user and adds it to the databse
 func CreateUser(db *sql.DB, user *usr.User) (*usr.User, error) {
@@ -43,6 +49,21 @@ func GenerateToken(user *usr.User) (string, error) {
 	}
 
 	return signedToken, nil
+}
+
+// UserAuthenticationMiddleware middleware for the user's restricted endpoints
+func UserAuthenticationMiddleware(r *http.Request) error {
+	token := r.Header["Authorization"]
+	if len(token) == 0 || token[0] == "" {
+		return ErrMissingToken
+	}
+
+	user, err := utils.DecodeToken(token[0])
+	if user == nil {
+		return err
+	}
+
+	return nil
 }
 
 func isPasswordCorrect(enteredPassword string, storedPassword string) bool {

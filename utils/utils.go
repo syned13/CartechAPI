@@ -14,6 +14,8 @@ import (
 
 var (
 	ErrInvalidTokenSigningMethod = errors.New("invalid token signing method")
+	ErrInvalidToken              = errors.New("invalid token")
+	ErrCouldNoGetClaims          = errors.New("could not get claims")
 )
 
 type errorResponse struct {
@@ -35,7 +37,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 }
 
 // DecodeToken decodes the token and returns the claims
-func DecodeToken(authToken string) *usr.User {
+func DecodeToken(authToken string) (*usr.User, error) {
 	token, err := jwt.Parse(authToken, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidTokenSigningMethod
@@ -46,11 +48,11 @@ func DecodeToken(authToken string) *usr.User {
 
 	if err != nil {
 		fmt.Println("error_parsing_jwt: ", err.Error())
-		return nil
+		return nil, err
 	}
 
 	if !token.Valid {
-		return nil
+		return nil, ErrInvalidToken
 	}
 
 	var user usr.User
@@ -58,8 +60,8 @@ func DecodeToken(authToken string) *usr.User {
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		claimsBytes, _ := json.Marshal(claims)
 		json.Unmarshal(claimsBytes, &user)
-		return &user
+		return &user, nil
 	}
 
-	return nil
+	return nil, ErrCouldNoGetClaims
 }
