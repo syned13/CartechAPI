@@ -43,7 +43,7 @@ func GetAllServiceCategories(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
 		}
 
-		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{"categories": serviceCategories})
+		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{"service_categories": serviceCategories})
 	}
 }
 
