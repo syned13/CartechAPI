@@ -86,8 +86,8 @@ func GetServicesByCategoryID(db *sql.DB) http.HandlerFunc {
 		}
 
 		responseMap := map[string]interface{}{}
-		responseMap["category_id"] = category.ServiceCategoryID
-		responseMap["category"] = category.ServiceCategory
+		responseMap["service_category_id"] = category.ServiceCategoryID
+		responseMap["service_category"] = category.ServiceCategory
 		responseMap["services"] = services
 
 		utils.RespondJSON(w, http.StatusOK, responseMap)
