@@ -159,6 +159,59 @@ func validateMechanicSignUpFields(mechanic mec.Mechanic) error {
 	return nil
 }
 
+func MechanicLogin(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mechanic := mec.Mechanic{}
+		err := json.NewDecoder(r.Body).Decode(&mechanic)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		if mechanic.Email == "" {
+			utils.RespondWithError(w, http.StatusBadRequest, "missing email")
+			return
+		}
+
+		if mechanic.Password == "" {
+			utils.RespondWithError(w, http.StatusBadRequest, "missing password")
+			return
+		}
+
+		retrievedMechanic, err := mec.GetMechanicByEmail(db, mechanic.Email)
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid email")
+			return
+		}
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		err = bcrypt.CompareHashAndPassword([]byte(retrievedMechanic.Password), []byte(mechanic.Password))
+		if !isPasswordCorrect(mechanic.Password, retrievedMechanic.Password) {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid password")
+			return
+		}
+
+		retrievedMechanic.Password = ""
+
+		token, err := GenerateMechanicToken(*retrievedMechanic)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		responseMap := map[string]interface{}{}
+		responseMap["token"] = token
+		responseMap["mechanic"] = retrievedMechanic
+
+		utils.RespondJSON(w, http.StatusCreated, responseMap)
+		return
+	}
+}
+
 func MechanichSignUp(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		mechanic := mec.Mechanic{}

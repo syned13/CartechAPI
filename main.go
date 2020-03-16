@@ -36,6 +36,7 @@ func main() {
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
 
 	router.HandleFunc("/mechanic/signup", auth.MechanichSignUp(db)).Methods(http.MethodPost)
+	router.HandleFunc("/mechanic/login", auth.MechanicLogin(db)).Methods(http.MethodPost)
 
 	router.HandleFunc("/service", service.GetAllServices(db)).Methods(http.MethodGet)
 	router.HandleFunc("/service/category", service.GetAllServiceCategories(db)).Methods(http.MethodGet)

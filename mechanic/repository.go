@@ -2,6 +2,7 @@ package mechanic
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/CartechAPI/shared"
 	"github.com/lib/pq"
@@ -45,4 +46,18 @@ func InsertMechanic(db *sql.DB, mechanic Mechanic) error {
 	}
 
 	return nil
+}
+
+// GetMechanicByEmail returns a mechanig given its email
+func GetMechanicByEmail(db *sql.DB, email string) (*Mechanic, error) {
+	query := "SELECT * FROM mechanic_table WHERE email = $1"
+
+	mechanic := Mechanic{}
+	err := db.QueryRow(query, email).Scan(&mechanic.MechanicID, &mechanic.Name, &mechanic.LastName, &mechanic.Email, &mechanic.NationalID, &mechanic.Password, &mechanic.Score, &mechanic.Bio, &mechanic.PhoneNumber)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return &mechanic, nil
 }

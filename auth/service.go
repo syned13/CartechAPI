@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	mec "github.com/CartechAPI/mechanic"
 	usr "github.com/CartechAPI/user"
 	"github.com/CartechAPI/utils"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -40,6 +41,23 @@ func GenerateToken(user *usr.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.UserID,
 		"iat":     now.String(),
+	})
+
+	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
+	if err != nil {
+		fmt.Println("error_signing_token: " + err.Error())
+		return "", err
+	}
+
+	return signedToken, nil
+}
+
+// GenerateMechanicToken returns the jwt for the mechanic logged in
+func GenerateMechanicToken(mechanic mec.Mechanic) (string, error) {
+	now := time.Now()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"mechanic_id": mechanic.MechanicID,
+		"iat":         now.String(),
 	})
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
