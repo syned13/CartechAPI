@@ -4,11 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
+	mec "github.com/CartechAPI/mechanic"
+	"github.com/CartechAPI/shared"
 	us "github.com/CartechAPI/user"
 	"github.com/CartechAPI/utils"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type apiResponse struct {
@@ -144,5 +148,52 @@ func SignUp(db *sql.DB) http.HandlerFunc {
 		user.Password = ""
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(user)
+	}
+}
+
+func validateMechanicSignUpFields(mechanic mec.Mechanic) error {
+	if mechanic.Name == "" || mechanic.LastName == "" || mechanic.Email == "" || mechanic.NationalID == "" || mechanic.PhoneNumber == "" || mechanic.Password == "" {
+		return ErrMissingFields
+	}
+
+	return nil
+}
+
+func MechanichSignUp(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mechanic := mec.Mechanic{}
+
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&mechanic)
+		if err != nil {
+			fmt.Println(err)
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		err = validateMechanicSignUpFields(mechanic)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(mechanic.Password), 10)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		mechanic.Password = string(hashedPassword)
+		err = mec.InsertMechanic(db, mechanic)
+		if err, ok := err.(shared.PublicError); ok {
+			showableError := err.(shared.ShowableError)
+			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
+			return
+		}
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
 	}
 }
