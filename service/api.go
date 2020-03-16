@@ -2,7 +2,6 @@ package service
 
 import (
 	"database/sql"
-	"errors"
 	"net/http"
 	"strconv"
 
@@ -66,7 +65,7 @@ func GetServicesByCategoryID(db *sql.DB) http.HandlerFunc {
 
 		category, err := getCategoryByID(db, categoryID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if err == sql.ErrNoRows {
 				utils.RespondWithError(w, http.StatusNotFound, "resource not found")
 				return
 			}
@@ -77,7 +76,7 @@ func GetServicesByCategoryID(db *sql.DB) http.HandlerFunc {
 
 		services, err := getServicesByCategoryID(db, categoryID)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
+			if err == sql.ErrNoRows {
 				utils.RespondWithError(w, http.StatusNotFound, "resource not found")
 				return
 			}

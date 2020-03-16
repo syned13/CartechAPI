@@ -179,7 +179,7 @@ func MechanicLogin(db *sql.DB) http.HandlerFunc {
 		}
 
 		retrievedMechanic, err := mec.GetMechanicByEmail(db, mechanic.Email)
-		if errors.Is(err, sql.ErrNoRows) {
+		if err == sql.ErrNoRows {
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid email")
 			return
 		}
