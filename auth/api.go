@@ -65,7 +65,7 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if err == sql.ErrNoRows {
+		if err == sql.ErrNoRows || userRetrieved == nil {
 			utils.RespondWithError(w, http.StatusBadRequest, "incorrect email or password")
 			return
 		}
@@ -129,17 +129,17 @@ func SignUp(db *sql.DB) http.HandlerFunc {
 
 		err = validateSignUpFields(*user)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusBadGateway, err.Error())
-			return
-		}
-
-		err = validateUniqueCredentials(db, *user)
-		if err != nil {
-			utils.RespondWithError(w, http.StatusBadGateway, err.Error())
+			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		user, err = CreateUser(db, user)
+		if err, ok := err.(shared.PublicError); ok {
+			showableError := err.(shared.ShowableError)
+			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
+			return
+		}
+
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
 			return
