@@ -31,6 +31,7 @@ func GetUserByEmail(db *sql.DB, username string) (*User, error) {
 	fmt.Println(username)
 	query := "SELECT * FROM user_table WHERE email = $1;"
 	err := db.QueryRow(query, username).Scan(&user.UserID, &user.Name, &user.LastName, &user.Email, &user.Password, &user.PhoneNumber)
+	fmt.Println(err)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println("failed_to_get_user: " + err.Error())
 		return nil, err

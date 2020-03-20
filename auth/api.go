@@ -207,7 +207,7 @@ func MechanicLogin(db *sql.DB) http.HandlerFunc {
 		responseMap["token"] = token
 		responseMap["mechanic"] = retrievedMechanic
 
-		utils.RespondJSON(w, http.StatusCreated, responseMap)
+		utils.RespondJSON(w, http.StatusOK, responseMap)
 		return
 	}
 }
