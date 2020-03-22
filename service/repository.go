@@ -13,6 +13,8 @@ func getServicesByCategoryID(db *sql.DB, categoryID int) ([]Service, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	services := []Service{}
 
 	for rows.Next() {
@@ -37,6 +39,8 @@ func getCategoryByID(db *sql.DB, categoryID int) (*Category, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	category := Category{}
 
 	rows.Next()
@@ -57,6 +61,8 @@ func getAllServiceCategories(db *sql.DB) ([]Category, error) {
 		fmt.Println("error_while_executing_query: ", err.Error())
 		return nil, err
 	}
+
+	defer rows.Close()
 
 	serviceCategories := []Category{}
 
