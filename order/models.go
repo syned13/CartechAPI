@@ -24,9 +24,9 @@ type ServiceOrder struct {
 	ServiceID      int                `json:"service_id"`
 	UserID         int                `json:"user_id"`
 	MechanicID     int                `json:"mechanic_id"`
-	CreatedAt      time.Time          `json:"created_at"`
-	StartedAt      time.Time          `json:"started_at"`
+	CreatedAt      *time.Time         `json:"created_at"`
+	StartedAt      *time.Time         `json:"started_at"`
 	Status         ServiceOrderStatus `json:"status"`
-	FinishedAt     time.Time          `json:"finished_at"`
-	CancelledAt    time.Time          `json:"cancelled_at"`
+	FinishedAt     *time.Time         `json:"finished_at"`
+	CancelledAt    *time.Time         `json:"cancelled_at"`
 }

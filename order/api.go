@@ -3,11 +3,14 @@ package order
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/CartechAPI/auth"
 	"github.com/CartechAPI/shared"
 	"github.com/CartechAPI/utils"
+	"github.com/gorilla/mux"
 )
 
 func validateServiceOrderFields(serviceOrder ServiceOrder) error {
@@ -64,5 +67,96 @@ func CreateServiceOrder(db *sql.DB) http.HandlerFunc {
 		}
 
 		utils.RespondJSON(w, http.StatusOK, serviceOrder)
+	}
+}
+
+func GetAllServiceOrders(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: check if user is admin, mechanic or regular user
+		serviceOrders, err := getAllOrders(db)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, http.StatusOK, serviceOrders)
+	}
+}
+
+// GetServiceOrder handles the request of a GET to a specific service order
+func GetServiceOrder(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		serviceOrderID, err := strconv.Atoi(params["order_id"])
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid request param")
+			return
+		}
+		serviceOrder, err := getServiceOrderByID(db, serviceOrderID)
+		if showableErr, ok := err.(shared.ShowableError); ok {
+			utils.RespondWithError(w, showableErr.StatusCode, "resource not found")
+			return
+		}
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, http.StatusOK, serviceOrder)
+	}
+}
+
+func validatePatchRequestBodyFields(patchRequest shared.PatchRequestBody) error {
+	if len(patchRequest) > 1 {
+		return errors.New("only one op is permitted")
+	}
+
+	for _, request := range patchRequest {
+		if request.Op == "" {
+			return errors.New("missing patch operation")
+		}
+
+		if request.Path == "" {
+			return errors.New("missing patch path")
+		}
+	}
+
+	return nil
+}
+
+// UpdateServiceOrder handles the request of updating a service order
+func UpdateServiceOrder(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		serviceOrderID, err := strconv.Atoi(params["order_id"])
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid request param")
+			return
+		}
+
+		patchRequest := shared.PatchRequestBody{}
+		err = json.NewDecoder(r.Body).Decode(&patchRequest)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid request body")
+			return
+		}
+
+		err = validatePatchRequestBodyFields(patchRequest)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		err = updateServiceOrder(db, serviceOrderID, patchRequest)
+		if showableError, ok := err.(shared.ShowableError); ok {
+			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
+			return
+		}
+
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
 	}
 }

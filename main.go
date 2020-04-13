@@ -44,6 +44,9 @@ func main() {
 	router.HandleFunc("/service/category/{category_id}", service.GetServicesByCategoryID(db)).Methods(http.MethodGet)
 
 	router.HandleFunc("/order", order.CreateServiceOrder(db)).Methods(http.MethodPost)
+	router.HandleFunc("/order", order.GetAllServiceOrders(db)).Methods(http.MethodGet)
+	router.HandleFunc("/order/{order_id}", order.UpdateServiceOrder(db)).Methods(http.MethodPatch)
+	router.HandleFunc("/order/{order_id}", order.GetServiceOrder(db)).Methods(http.MethodGet)
 
 	fmt.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
