@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/CartechAPI/auth"
+	"github.com/CartechAPI/order"
 	"github.com/CartechAPI/service"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
@@ -41,6 +42,9 @@ func main() {
 	router.HandleFunc("/service", service.GetAllServices(db)).Methods(http.MethodGet)
 	router.HandleFunc("/service/category", service.GetAllServiceCategories(db)).Methods(http.MethodGet)
 	router.HandleFunc("/service/category/{category_id}", service.GetServicesByCategoryID(db)).Methods(http.MethodGet)
+
+	router.HandleFunc("/order", order.CreateServiceOrder(db)).Methods(http.MethodPost)
+
 	fmt.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
 }
