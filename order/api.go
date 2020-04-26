@@ -14,18 +14,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func validateServiceOrderFields(serviceOrder ServiceOrder) error {
-	if serviceOrder.UserID == 0 {
-		return shared.NewBadRequestError("missing user id")
-	}
-
-	if serviceOrder.ServiceID == 0 {
-		return shared.NewBadRequestError("missing service id")
-	}
-
-	return nil
-}
-
 // CreateServiceOrder receives the request to create a service request
 func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -42,34 +30,15 @@ func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 			return
 		}
 
-		err = validateServiceOrderFields(serviceOrder)
+		err = createServiceOrder(db, channel, &serviceOrder)
 		if err, ok := err.(shared.PublicError); ok {
 			showableError := err.(shared.ShowableError)
 			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
 			return
 		}
 
-		serviceOrders, err := getServiceOrderByUserIDAndStatus(db, serviceOrder.UserID)
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "internal sever error")
-			return
-		}
-
-		if len(serviceOrders) > 0 {
-			utils.RespondWithError(w, http.StatusBadRequest, "user is not allowed to have more than one service")
-			return
-		}
-
-		serviceOrder.Status = ServiceOrderStatusPending
-		err = insertServiceOrder(db, serviceOrder)
-		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "internal sever error")
-			return
-		}
-
-		err = assignOrder(channel, serviceOrder)
-		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "internal sever error")
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 

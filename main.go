@@ -24,7 +24,6 @@ func init() {
 }
 
 func main() {
-
 	connectionString := os.Getenv("DB_CONNECTION")
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
@@ -45,7 +44,13 @@ func main() {
 	defer channel.Close()
 
 	router := mux.NewRouter()
+	defineRoutes(db, channel, router)
 
+	fmt.Println("Listening on port", port)
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+}
+
+func defineRoutes(db *sql.DB, channel *amqp.Channel, router *mux.Router) {
 	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
 	router.HandleFunc("/login", auth.Login(db)).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
@@ -61,7 +66,4 @@ func main() {
 	router.HandleFunc("/order", order.GetAllServiceOrders(db)).Methods(http.MethodGet)
 	router.HandleFunc("/order/{order_id}", order.UpdateServiceOrder(db)).Methods(http.MethodPatch)
 	router.HandleFunc("/order/{order_id}", order.GetServiceOrder(db)).Methods(http.MethodGet)
-
-	fmt.Println("Listening on port", port)
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
 }

@@ -95,27 +95,6 @@ func Login(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-func validateSignUpFields(user us.User) error {
-	if user.Email == "" || user.LastName == "" || user.Name == "" || user.Password == "" || user.PhoneNumber == "" {
-		return ErrMissingFields
-	}
-
-	return nil
-}
-
-func validateUniqueCredentials(db *sql.DB, user us.User) error {
-	retrievedUser, err := us.GetUserByEmail(db, user.Email)
-	if err != nil {
-		return err
-	}
-
-	if retrievedUser != nil {
-		return ErrNotUniqueEmail
-	}
-
-	return nil
-}
-
 // SignUp returns the handler of the POST /signup endpoint
 func SignUp(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -127,21 +106,13 @@ func SignUp(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err = validateSignUpFields(*user)
-		if err != nil {
-			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		user, err = signUp(db, user)
+		if showableErr, ok := err.(shared.ShowableError); ok {
+			utils.RespondWithError(w, showableErr.StatusCode, showableErr.Message)
 			return
 		}
-
-		user, err = CreateUser(db, user)
-		if err, ok := err.(shared.PublicError); ok {
-			showableError := err.(shared.ShowableError)
-			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
-			return
-		}
-
 		if err != nil {
-			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 

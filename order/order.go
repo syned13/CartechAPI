@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/CartechAPI/shared"
@@ -14,9 +15,57 @@ import (
 var (
 	// ErrMissingNewValue missing new value
 	ErrMissingNewValue = errors.New("missing new value")
+	// ErrMissingUserID missing user id
+	ErrMissingUserID = shared.NewBadRequestError("missing user id")
+	// ErrMissingServiceID missing service id
+	ErrMissingServiceID = shared.NewBadRequestError("missing service id")
+	// ErrMultipleServiceOrders multiple service orders
+	ErrMultipleServiceOrders = shared.NewBadRequestError("user is not allowed to have more than one service")
 )
 
-const ASSIGNER_QUEUE = "assign-order"
+// AssignerQueue assigner queue
+const AssignerQueue = "assign-order"
+
+func validateServiceOrderFields(serviceOrder ServiceOrder) error {
+	if serviceOrder.UserID == 0 {
+		return ErrMissingUserID
+	}
+
+	if serviceOrder.ServiceID == 0 {
+		return ErrMissingServiceID
+	}
+
+	return nil
+}
+
+func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *ServiceOrder) error {
+	err := validateServiceOrderFields(*serviceOrder)
+	if err != nil {
+		return err
+	}
+
+	serviceOrders, err := getServiceOrderByUserIDAndStatus(db, serviceOrder.UserID)
+	if err != nil {
+		return err
+	}
+
+	if len(serviceOrders) > 0 {
+		return ErrMultipleServiceOrders
+	}
+
+	serviceOrder.Status = ServiceOrderStatusPending
+	err = insertServiceOrder(db, *serviceOrder)
+	if err != nil {
+		return err
+	}
+
+	err = assignOrder(channel, *serviceOrder)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func assignOrder(channel *amqp.Channel, order ServiceOrder) error {
 	marshalledOrder, err := json.Marshal(order)
@@ -27,7 +76,7 @@ func assignOrder(channel *amqp.Channel, order ServiceOrder) error {
 
 	err = channel.Publish(
 		"",
-		ASSIGNER_QUEUE,
+		AssignerQueue,
 		false,
 		false,
 		amqp.Publishing{
@@ -36,7 +85,8 @@ func assignOrder(channel *amqp.Channel, order ServiceOrder) error {
 	)
 
 	if err != nil {
-		fmt.Println("failed_to_publish_message_assign_order:" + err.Error())
+		log.Println("failed_to_publish_message_assign_order: " + err.Error())
+		return err
 	}
 
 	return nil
