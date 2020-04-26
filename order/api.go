@@ -11,6 +11,7 @@ import (
 	"github.com/CartechAPI/shared"
 	"github.com/CartechAPI/utils"
 	"github.com/gorilla/mux"
+	"github.com/streadway/amqp"
 )
 
 func validateServiceOrderFields(serviceOrder ServiceOrder) error {
@@ -26,7 +27,7 @@ func validateServiceOrderFields(serviceOrder ServiceOrder) error {
 }
 
 // CreateServiceOrder receives the request to create a service request
-func CreateServiceOrder(db *sql.DB) http.HandlerFunc {
+func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		serviceOrder := ServiceOrder{}
 		err := auth.UserAuthenticationMiddleware(r)
@@ -61,6 +62,12 @@ func CreateServiceOrder(db *sql.DB) http.HandlerFunc {
 
 		serviceOrder.Status = ServiceOrderStatusPending
 		err = insertServiceOrder(db, serviceOrder)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal sever error")
+			return
+		}
+
+		err = assignOrder(channel, serviceOrder)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal sever error")
 			return

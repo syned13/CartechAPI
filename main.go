@@ -12,6 +12,7 @@ import (
 	"github.com/CartechAPI/service"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
+	"github.com/streadway/amqp"
 	"github.com/subosito/gotenv"
 )
 
@@ -29,6 +30,19 @@ func main() {
 	if err != nil {
 		log.Fatal("could_not_open_db: ", err)
 	}
+	defer db.Close()
+
+	queueConnection, err := amqp.Dial(os.Getenv("CLOUDAMQP_URL"))
+	if err != nil {
+		log.Fatal("could_not_connect_to_queue: ", err)
+	}
+	defer queueConnection.Close()
+
+	channel, err := queueConnection.Channel()
+	if err != nil {
+		log.Fatal("could_not_open_channel_to_queue: ", err)
+	}
+	defer channel.Close()
 
 	router := mux.NewRouter()
 
@@ -43,7 +57,7 @@ func main() {
 	router.HandleFunc("/service/category", service.GetAllServiceCategories(db)).Methods(http.MethodGet)
 	router.HandleFunc("/service/category/{category_id}", service.GetServicesByCategoryID(db)).Methods(http.MethodGet)
 
-	router.HandleFunc("/order", order.CreateServiceOrder(db)).Methods(http.MethodPost)
+	router.HandleFunc("/order", order.CreateServiceOrder(db, channel)).Methods(http.MethodPost)
 	router.HandleFunc("/order", order.GetAllServiceOrders(db)).Methods(http.MethodGet)
 	router.HandleFunc("/order/{order_id}", order.UpdateServiceOrder(db)).Methods(http.MethodPatch)
 	router.HandleFunc("/order/{order_id}", order.GetServiceOrder(db)).Methods(http.MethodGet)
