@@ -19,6 +19,10 @@ var (
 	ErrMissingUserID = shared.NewBadRequestError("missing user id")
 	// ErrMissingServiceID missing service id
 	ErrMissingServiceID = shared.NewBadRequestError("missing service id")
+	// ErrMissingLatitude missing latitude
+	ErrMissingLatitude = shared.NewBadRequestError("missing service location latitude")
+	// ErrMissingLongitude missing service location longitude
+	ErrMissingLongitude = shared.NewBadRequestError("missing service location longitude")
 	// ErrMultipleServiceOrders multiple service orders
 	ErrMultipleServiceOrders = shared.NewBadRequestError("user is not allowed to have more than one service")
 )
@@ -33,6 +37,14 @@ func validateServiceOrderFields(serviceOrder ServiceOrder) error {
 
 	if serviceOrder.ServiceID == 0 {
 		return ErrMissingServiceID
+	}
+
+	if serviceOrder.Lat == 0 {
+		return ErrMissingLatitude
+	}
+
+	if serviceOrder.Lng == 0 {
+		return ErrMissingLongitude
 	}
 
 	return nil

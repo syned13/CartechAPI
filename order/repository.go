@@ -16,8 +16,8 @@ var (
 )
 
 func insertServiceOrder(db *sql.DB, serviceOrder ServiceOrder) error {
-	query := "INSERT INTO service_order_table (service_id, user_id, created_at, status) VALUES ($1, $2, NOW(), $3)"
-	_, err := db.Exec(query, serviceOrder.ServiceID, serviceOrder.UserID, serviceOrder.Status)
+	query := "INSERT INTO service_order_table (service_id, user_id, created_at, status, lat, lng) VALUES ($1, $2, NOW(), $3, $4, $5)"
+	_, err := db.Exec(query, serviceOrder.ServiceID, serviceOrder.UserID, serviceOrder.Status, serviceOrder.Lat, serviceOrder.Lng)
 	if err != nil {
 		fmt.Println("error inserting into service_order: " + err.Error())
 		return err
@@ -41,7 +41,9 @@ func getServiceOrderByUserIDAndStatus(db *sql.DB, userID int) ([]ServiceOrder, e
 		// TODO: handle this null types
 		var mechanicID sql.NullInt64
 		var startedAt, finishedAt, cancelledAt sql.NullTime
-		err = rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt)
+		var lat, lng sql.NullFloat64
+
+		err = rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng)
 		if err != nil {
 			fmt.Println("error while scanning rows from service_order_table by user_id and status: " + err.Error())
 			return nil, err
@@ -63,6 +65,11 @@ func getServiceOrderByUserIDAndStatus(db *sql.DB, userID int) ([]ServiceOrder, e
 			serviceOrder.CancelledAt = &cancelledAt.Time
 		}
 
+		if lat.Valid && lng.Valid {
+			serviceOrder.Lat = lat.Float64
+			serviceOrder.Lng = lng.Float64
+		}
+
 		serviceOrders = append(serviceOrders, serviceOrder)
 	}
 
@@ -76,7 +83,8 @@ func getServiceOrderByID(db *sql.DB, serviceOrderID int) (*ServiceOrder, error) 
 	serviceOrder := ServiceOrder{}
 	var mechanicID sql.NullInt64
 	var startedAt, finishedAt, cancelledAt sql.NullTime
-	err := row.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt)
+	var lat, lng sql.NullFloat64
+	err := row.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng)
 	if err == sql.ErrNoRows {
 		return nil, shared.NewShowableError("not found", http.StatusNotFound) //TODO: make this error a constant in a shared package
 	}
@@ -102,6 +110,11 @@ func getServiceOrderByID(db *sql.DB, serviceOrderID int) (*ServiceOrder, error) 
 		serviceOrder.CancelledAt = &cancelledAt.Time
 	}
 
+	if lat.Valid && lng.Valid {
+		serviceOrder.Lat = lat.Float64
+		serviceOrder.Lng = lng.Float64
+	}
+
 	return &serviceOrder, nil
 }
 
@@ -120,8 +133,9 @@ func getAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 		serviceOrder := ServiceOrder{}
 		var mechanicID sql.NullInt64
 		var startedAt, finishedAt, cancelledAt sql.NullTime
+		var lat, lng sql.NullFloat64
 
-		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt)
+		err = rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng)
 		if err != nil {
 			fmt.Println("error scanning row on getAllOrders: " + err.Error())
 			return nil, err
@@ -141,6 +155,11 @@ func getAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 
 		if cancelledAt.Valid {
 			serviceOrder.CancelledAt = &cancelledAt.Time
+		}
+
+		if lat.Valid && lng.Valid {
+			serviceOrder.Lat = lat.Float64
+			serviceOrder.Lng = lng.Float64
 		}
 
 		serviceOrders = append(serviceOrders, serviceOrder)

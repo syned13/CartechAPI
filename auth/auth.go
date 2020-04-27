@@ -30,7 +30,42 @@ var (
 	ErrMissingPassword = shared.NewBadRequestError("missing password")
 	// ErrMissingPhoneNumber missing phone number
 	ErrMissingPhoneNumber = shared.NewBadRequestError("missing phone number")
+	// ErrInvalidCredentials invalid credentials
+	ErrInvalidCredentials = shared.NewBadRequestError("incorrect email or password")
 )
+
+func login(db *sql.DB, user us.User) (string, *usr.User, error) {
+	if user.Email == "" {
+		return "", nil, ErrMissingEmail
+	}
+
+	if user.Password == "" {
+		return "", nil, ErrMissingPassword
+	}
+
+	userRetrieved, err := us.GetUserByEmail(db, user.Email)
+	if err != nil && err != sql.ErrNoRows {
+		return "", nil, err
+	}
+
+	// user does not exist
+	if err == sql.ErrNoRows || userRetrieved == nil {
+		return "", nil, ErrInvalidCredentials
+	}
+
+	if !isPasswordCorrect(user.Password, userRetrieved.Password) {
+		return "", nil, ErrInvalidCredentials
+	}
+
+	token, err := GenerateTokenForUser(userRetrieved)
+	if err != nil {
+		return "", nil, err
+	}
+
+	userRetrieved.Password = ""
+
+	return token, userRetrieved, nil
+}
 
 func validateSignUpFields(user us.User) error {
 	if user.Email == "" {
@@ -86,10 +121,11 @@ func CreateUser(db *sql.DB, user *usr.User) (*usr.User, error) {
 	return user, nil
 }
 
-// GenerateToken returns the jwt for the user logged in
-func GenerateToken(user *usr.User) (string, error) {
+// GenerateTokenForUser returns the jwt for the user logged in
+func GenerateTokenForUser(user *usr.User) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"type":    shared.ClientTypeUser,
 		"user_id": user.UserID,
 		"iat":     now.String(),
 	})

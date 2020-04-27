@@ -29,4 +29,6 @@ type ServiceOrder struct {
 	Status         ServiceOrderStatus `json:"status"`
 	FinishedAt     *time.Time         `json:"finished_at"`
 	CancelledAt    *time.Time         `json:"cancelled_at"`
+	Lat            float64            `json:"lat"`
+	Lng            float64            `json:"lng"`
 }

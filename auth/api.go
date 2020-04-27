@@ -41,53 +41,26 @@ func Index() http.HandlerFunc {
 // Login returns handler of POST /login endpoint
 func Login(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user := us.User{}
+		user := &us.User{}
 
-		err := json.NewDecoder(r.Body).Decode(&user)
+		err := json.NewDecoder(r.Body).Decode(user)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid_request_body")
 			return
 		}
 
-		if user.Email == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "missing email")
-			return
-		}
+		token, user, err := login(db, *user)
 
-		if user.Password == "" {
-			utils.RespondWithError(w, http.StatusBadRequest, "missing password")
-			return
-		}
+		marshalledUser, _ := json.Marshal(user)
 
-		userRetrieved, err := us.GetUserByEmail(db, user.Email)
-		if err != nil && err != sql.ErrNoRows {
-			utils.RespondWithError(w, http.StatusInternalServerError, "unexpected error")
-			return
-		}
+		var responseMap map[string]interface{}
 
-		if err == sql.ErrNoRows || userRetrieved == nil {
-			utils.RespondWithError(w, http.StatusBadRequest, "incorrect email or password")
-			return
-		}
-
-		if !isPasswordCorrect(user.Password, userRetrieved.Password) {
-			utils.RespondWithError(w, http.StatusBadRequest, "incorrect email or password")
-			return
-		}
-
-		user = *userRetrieved
-		token, err := GenerateToken(&user)
+		err = json.Unmarshal(marshalledUser, &responseMap)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 
-		user.Password = ""
-		marshalledUser, _ := json.Marshal(user)
-
-		var responseMap map[string]interface{}
-
-		_ = json.Unmarshal(marshalledUser, &responseMap)
 		responseMap["token"] = token
 
 		utils.RespondJSON(w, http.StatusOK, responseMap)

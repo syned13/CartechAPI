@@ -2,11 +2,25 @@ package shared
 
 import "net/http"
 
+// PatchOp represents a patch operation
 type PatchOp string
 
 const (
+	// PatchOpReplace represents replace operation on a resource property
 	PatchOpReplace PatchOp = "replace"
 )
+
+// ClientType identifies type of client
+type ClientType string
+
+// ClientTypeUser identifies regular user
+var ClientTypeUser ClientType = "user"
+
+// ClientTypeMechanic identifies mechanic
+var ClientTypeMechanic ClientType = "mechanic"
+
+// ClientTypeAdmin identifies admin
+var ClientTypeAdmin ClientType = "admin"
 
 // PatchRequestBody is the representation of the body of a PATCH request
 type PatchRequestBody []struct {
@@ -15,6 +29,7 @@ type PatchRequestBody []struct {
 	Value string  `json:"value,omitempty"`
 }
 
+// PublicError is an error to show to the user
 type PublicError interface {
 	publicError()
 }
