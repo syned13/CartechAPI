@@ -1,6 +1,9 @@
 package shared
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // PatchOp represents a patch operation
 type PatchOp string
@@ -9,6 +12,15 @@ const (
 	// PatchOpReplace represents replace operation on a resource property
 	PatchOpReplace PatchOp = "replace"
 )
+
+type TokenClaims struct {
+	ClientType ClientType `json:"type"`
+	ID         int        `json:"id"`
+	IAT        time.Time  `json:"iat"`
+}
+
+// Client is the type of requester of a resource
+type Client interface{ client() }
 
 // ClientType identifies type of client
 type ClientType string

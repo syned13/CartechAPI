@@ -49,11 +49,23 @@ func Login(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		token, user, err := login(db, *user)
+		token, user, err := login(db, user)
+		if showableErr, ok := err.(shared.ShowableError); ok {
+			utils.RespondWithError(w, showableErr.StatusCode, showableErr.Message)
+			return
+		}
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
 
 		marshalledUser, _ := json.Marshal(user)
 
-		var responseMap map[string]interface{}
+		responseMap := make(map[string]interface{})
+		if responseMap == nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "nil!")
+			return
+		}
 
 		err = json.Unmarshal(marshalledUser, &responseMap)
 		if err != nil {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -48,9 +49,15 @@ func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 
 func GetAllServiceOrders(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: check if user is admin, mechanic or regular user
-		serviceOrders, err := getAllOrders(db)
+		token := r.Header.Get("Authorization")
+		if token == "" {
+			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
+			return
+		}
+
+		serviceOrders, err := getAllServiceOrders(db, token)
 		if err != nil {
+			log.Println(err.Error())
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}

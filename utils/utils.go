@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	usr "github.com/CartechAPI/user"
+	"github.com/CartechAPI/shared"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -16,6 +16,7 @@ var (
 	ErrInvalidTokenSigningMethod = errors.New("invalid token signing method")
 	ErrInvalidToken              = errors.New("invalid token")
 	ErrCouldNoGetClaims          = errors.New("could not get claims")
+	ErrCouldNot                  = errors.New("could not")
 )
 
 type errorResponse struct {
@@ -37,7 +38,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 }
 
 // DecodeToken decodes the token and returns the claims
-func DecodeToken(authToken string) (*usr.User, error) {
+func DecodeToken(authToken string) (shared.ClientType, int, error) {
 	token, err := jwt.Parse(authToken, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidTokenSigningMethod
@@ -48,20 +49,24 @@ func DecodeToken(authToken string) (*usr.User, error) {
 
 	if err != nil {
 		fmt.Println("error_parsing_jwt: ", err.Error())
-		return nil, err
+		return "", 0, err
 	}
 
 	if !token.Valid {
-		return nil, ErrInvalidToken
+		return "", 0, ErrInvalidToken
 	}
 
-	var user usr.User
+	tokenClaims := shared.TokenClaims{}
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		claimsBytes, _ := json.Marshal(claims)
-		json.Unmarshal(claimsBytes, &user)
-		return &user, nil
+	claimsBytes, err := json.Marshal(token.Claims)
+	if err != nil {
+		return "", 0, err
 	}
 
-	return nil, ErrCouldNoGetClaims
+	err = json.Unmarshal(claimsBytes, &tokenClaims)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return tokenClaims.ClientType, tokenClaims.ID, nil
 }

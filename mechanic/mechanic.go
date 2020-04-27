@@ -12,3 +12,5 @@ type Mechanic struct {
 	Bio         string  `json:"bio"`
 	PhoneNumber string  `json:"phone_number"`
 }
+
+func (mechanic Mechanic) client() {}

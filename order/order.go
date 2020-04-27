@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/CartechAPI/shared"
+	"github.com/CartechAPI/utils"
 	"github.com/streadway/amqp"
 )
 
@@ -136,4 +137,29 @@ func replaceOnServiceOrder(db *sql.DB, serviceOrderID int, toReplace string, new
 	}
 
 	return nil
+}
+
+func getAllServiceOrders(db *sql.DB, token string) ([]ServiceOrder, error) {
+	clientType, id, err := utils.DecodeToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	serviceOrders := []ServiceOrder{}
+
+	if clientType == shared.ClientTypeUser {
+		serviceOrders, err = selectAllOrdersFromUser(db, id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if clientType == shared.ClientTypeAdmin {
+		serviceOrders, err = selectAllOrders(db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return serviceOrders, nil
 }

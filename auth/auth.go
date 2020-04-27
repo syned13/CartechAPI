@@ -34,7 +34,7 @@ var (
 	ErrInvalidCredentials = shared.NewBadRequestError("incorrect email or password")
 )
 
-func login(db *sql.DB, user us.User) (string, *usr.User, error) {
+func login(db *sql.DB, user *us.User) (string, *usr.User, error) {
 	if user.Email == "" {
 		return "", nil, ErrMissingEmail
 	}
@@ -57,7 +57,7 @@ func login(db *sql.DB, user us.User) (string, *usr.User, error) {
 		return "", nil, ErrInvalidCredentials
 	}
 
-	token, err := GenerateTokenForUser(userRetrieved)
+	token, err := GenerateToken(userRetrieved.UserID, shared.ClientTypeUser)
 	if err != nil {
 		return "", nil, err
 	}
@@ -121,13 +121,13 @@ func CreateUser(db *sql.DB, user *usr.User) (*usr.User, error) {
 	return user, nil
 }
 
-// GenerateTokenForUser returns the jwt for the user logged in
-func GenerateTokenForUser(user *usr.User) (string, error) {
+// GenerateToken returns the jwt for the client logged in
+func GenerateToken(id int, clientType shared.ClientType) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"type":    shared.ClientTypeUser,
-		"user_id": user.UserID,
-		"iat":     now.String(),
+		"type": clientType,
+		"id":   id,
+		"iat":  now,
 	})
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
@@ -163,8 +163,8 @@ func UserAuthenticationMiddleware(r *http.Request) error {
 		return ErrMissingToken
 	}
 
-	user, err := utils.DecodeToken(token[0])
-	if user == nil {
+	_, _, err := utils.DecodeToken(token[0])
+	if err != nil {
 		return err
 	}
 
