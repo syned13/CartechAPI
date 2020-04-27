@@ -3,6 +3,7 @@ package auth
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -165,6 +166,7 @@ func UserAuthenticationMiddleware(r *http.Request) error {
 
 	_, _, err := utils.DecodeToken(token[0])
 	if err != nil {
+		log.Println(err.Error())
 		return err
 	}
 
