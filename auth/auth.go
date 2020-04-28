@@ -158,19 +158,19 @@ func GenerateMechanicToken(mechanic mec.Mechanic) (string, error) {
 }
 
 // UserAuthenticationMiddleware middleware for the user's restricted endpoints
-func UserAuthenticationMiddleware(r *http.Request) error {
+func UserAuthenticationMiddleware(r *http.Request) (shared.ClientType, int, error) {
 	token := r.Header["Authorization"]
 	if len(token) == 0 || token[0] == "" {
-		return ErrMissingToken
+		return "", 0, ErrMissingToken
 	}
 
-	_, _, err := utils.DecodeToken(token[0])
+	clientType, id, err := utils.DecodeToken(token[0])
 	if err != nil {
 		log.Println(err.Error())
-		return err
+		return "", 0, err
 	}
 
-	return nil
+	return clientType, id, err
 }
 
 func isPasswordCorrect(enteredPassword string, storedPassword string) bool {

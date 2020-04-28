@@ -163,3 +163,29 @@ func getAllServiceOrders(db *sql.DB, token string) ([]ServiceOrder, error) {
 
 	return serviceOrders, nil
 }
+
+func getAllPastServiceOrders(db *sql.DB, clientType shared.ClientType, id int) ([]ServiceOrder, error) {
+	if clientType == shared.ClientTypeUser {
+		serviceOrders, err := selectAllPastServiceOrdersByUser(db, id)
+		if err != nil {
+			return nil, err
+		}
+
+		return serviceOrders, nil
+	}
+
+	return nil, errors.New("not yet implemented")
+}
+
+func getAllCurrentOrders(db *sql.DB, clientType shared.ClientType, id int) ([]ServiceOrder, error) {
+	if clientType == shared.ClientTypeUser {
+		serviceOrders, err := selectAllCurrentOrdersByUser(db, id)
+		if err != nil {
+			return nil, err
+		}
+
+		return serviceOrders, nil
+	}
+
+	return nil, errors.New("not yet implemented")
+}

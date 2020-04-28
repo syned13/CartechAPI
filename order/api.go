@@ -19,7 +19,8 @@ import (
 func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		serviceOrder := ServiceOrder{}
-		err := auth.UserAuthenticationMiddleware(r)
+		// TODO: shouldnt we use the user id from the jwt?
+		_, _, err := auth.UserAuthenticationMiddleware(r)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
 			return
@@ -47,6 +48,7 @@ func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 	}
 }
 
+// GetAllServiceOrders handles the request for getting all service orders
 func GetAllServiceOrders(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
@@ -58,6 +60,44 @@ func GetAllServiceOrders(db *sql.DB) http.HandlerFunc {
 		serviceOrders, err := getAllServiceOrders(db, token)
 		if err != nil {
 			log.Println(err.Error())
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, http.StatusOK, serviceOrders)
+	}
+}
+
+// GetAllPastServiceOrders returns the past service orders
+func GetAllPastServiceOrders(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clientType, id, err := auth.UserAuthenticationMiddleware(r)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
+			return
+		}
+
+		serviceOrders, err := getAllPastServiceOrders(db, clientType, id)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, http.StatusOK, serviceOrders)
+	}
+}
+
+// GetAllCurrentOrders handles the request for getting all current orders
+func GetAllCurrentOrders(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clientType, id, err := auth.UserAuthenticationMiddleware(r)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
+			return
+		}
+
+		serviceOrders, err := getAllCurrentOrders(db, clientType, id)
+		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}

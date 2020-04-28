@@ -13,7 +13,7 @@ import (
 // GetAllServices returns all the mechanic services
 func GetAllServices(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := auth.UserAuthenticationMiddleware(r)
+		_, _, err := auth.UserAuthenticationMiddleware(r)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
 			return
@@ -32,7 +32,7 @@ func GetAllServices(db *sql.DB) http.HandlerFunc {
 // GetAllServiceCategories returns all the services categories
 func GetAllServiceCategories(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := auth.UserAuthenticationMiddleware(r)
+		_, _, err := auth.UserAuthenticationMiddleware(r)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
 			return
@@ -50,7 +50,7 @@ func GetAllServiceCategories(db *sql.DB) http.HandlerFunc {
 // GetServicesByCategoryID returns all services within a category
 func GetServicesByCategoryID(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := auth.UserAuthenticationMiddleware(r)
+		_, _, err := auth.UserAuthenticationMiddleware(r)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusUnauthorized, "client is unauthorized to perform the request")
 			return
