@@ -81,7 +81,11 @@ func getServiceOrderByID(db *sql.DB, serviceOrderID int) (*ServiceOrder, error) 
 
 // TODO: paginate this
 func selectAllOrdersFromUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
-	query := "SELECT * FROM service_order_table where user_id = $1"
+	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id
+	WHERE user_id = $1`
+
 	rows, err := db.Query(query, userID)
 	if err != nil {
 		fmt.Println("error while selecting user service_order: " + err.Error())
@@ -93,7 +97,10 @@ func selectAllOrdersFromUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
 
 // TODO: paginate this
 func selectAllOrders(db *sql.DB) ([]ServiceOrder, error) {
-	query := "SELECT * FROM service_order_table"
+	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id`
+
 	rows, err := db.Query(query)
 	if err != nil {
 		fmt.Println("error while selecting all service_order: " + err.Error())
@@ -104,7 +111,11 @@ func selectAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 }
 
 func selectAllPastServiceOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
-	query := fmt.Sprintf("SELECT * FROM service_order_table WHERE user_id = $1 AND status = '%s';", ServiceOrderStatusFinished)
+	query := fmt.Sprintf(`SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id
+	WHERE user_id = $1 AND status = '%s';`, ServiceOrderStatusFinished)
+
 	rows, err := db.Query(query, userID)
 	if err != nil {
 		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
@@ -115,7 +126,11 @@ func selectAllPastServiceOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, e
 }
 
 func selectAllCurrentOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
-	query := fmt.Sprintf("SELECT * FROM service_order_table WHERE user_id = $1 AND (status = '%s' OR status = '%s');", ServiceOrderStatusInProgress, ServiceOrderStatusPending)
+	query := fmt.Sprintf(`SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id 
+	WHERE user_id = $1 AND (status = '%s' OR status = '%s');`, ServiceOrderStatusInProgress, ServiceOrderStatusPending)
+
 	rows, err := db.Query(query, userID)
 	if err != nil {
 		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
@@ -134,7 +149,7 @@ func scanServiceOrders(rows *sql.Rows) ([]ServiceOrder, error) {
 		var startedAt, finishedAt, cancelledAt sql.NullTime
 		var lat, lng sql.NullFloat64
 
-		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng)
+		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng, &serviceOrder.ServiceName)
 		if err != nil {
 			fmt.Println("error while scanning service_orders: " + err.Error())
 			return nil, err

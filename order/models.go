@@ -22,6 +22,7 @@ const (
 type ServiceOrder struct {
 	ServiceOrderID int                `json:"service_order_id"`
 	ServiceID      int                `json:"service_id"`
+	ServiceName    string             `json:"service_name"`
 	UserID         int                `json:"user_id"`
 	MechanicID     int                `json:"mechanic_id"`
 	CreatedAt      *time.Time         `json:"created_at"`

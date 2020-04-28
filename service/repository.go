@@ -79,3 +79,21 @@ func getAllServiceCategories(db *sql.DB) ([]Category, error) {
 
 	return serviceCategories, nil
 }
+
+func scanServices(rows *sql.Rows) ([]Service, error) {
+	services := []Service{}
+
+	var err error
+	for rows.Next() {
+		service := Service{}
+		err = rows.Scan(&service.ServiceID, &service.ServiceName, &service.ServiceCategoryID)
+		if err != nil {
+			fmt.Println("error_while_scanning_row_service_table: ", err.Error())
+			return nil, err
+		}
+
+		services = append(services, service)
+	}
+
+	return services, nil
+}
