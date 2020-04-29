@@ -27,7 +27,11 @@ func insertServiceOrder(db *sql.DB, serviceOrder ServiceOrder) error {
 }
 
 func getServiceOrderByUserIDAndStatus(db *sql.DB, userID int) ([]ServiceOrder, error) {
-	query := "SELECT * FROM service_order_table WHERE user_id = $1 AND (status = 'pending' OR status = 'in_progress')"
+	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name 
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id
+	WHERE user_id = $1 AND (status = 'pending' OR status = 'in_progress')`
+
 	rows, err := db.Query(query, userID)
 	if err != nil {
 		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
