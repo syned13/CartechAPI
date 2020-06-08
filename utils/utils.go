@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -48,7 +48,7 @@ func DecodeToken(authToken string) (shared.ClientType, int, error) {
 	})
 
 	if err != nil {
-		fmt.Println("error_parsing_jwt: ", err.Error())
+		log.Println("error_parsing_jwt: ", err.Error())
 		return "", 0, err
 	}
 

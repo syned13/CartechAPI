@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/CartechAPI/shared"
@@ -19,7 +20,7 @@ func insertServiceOrder(db *sql.DB, serviceOrder ServiceOrder) error {
 	query := "INSERT INTO service_order_table (service_id, user_id, created_at, status, lat, lng) VALUES ($1, $2, NOW(), $3, $4, $5)"
 	_, err := db.Exec(query, serviceOrder.ServiceID, serviceOrder.UserID, serviceOrder.Status, serviceOrder.Lat, serviceOrder.Lng)
 	if err != nil {
-		fmt.Println("error inserting into service_order: " + err.Error())
+		log.Println("error inserting into service_order: " + err.Error())
 		return err
 	}
 
@@ -34,7 +35,7 @@ func getServiceOrderByUserIDAndStatus(db *sql.DB, userID int) ([]ServiceOrder, e
 
 	rows, err := db.Query(query, userID)
 	if err != nil {
-		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
+		log.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
 		return nil, err
 	}
 
@@ -55,7 +56,7 @@ func getServiceOrderByID(db *sql.DB, serviceOrderID int) (*ServiceOrder, error) 
 	}
 
 	if err != nil {
-		fmt.Println("error scanning row on getServiceOrderByID: " + err.Error())
+		log.Println("error scanning row on getServiceOrderByID: " + err.Error())
 		return nil, err
 	}
 
@@ -92,7 +93,7 @@ func selectAllOrdersFromUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
 
 	rows, err := db.Query(query, userID)
 	if err != nil {
-		fmt.Println("error while selecting user service_order: " + err.Error())
+		log.Println("error while selecting user service_order: " + err.Error())
 		return nil, err
 	}
 
@@ -107,7 +108,7 @@ func selectAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Println("error while selecting all service_order: " + err.Error())
+		log.Println("error while selecting all service_order: " + err.Error())
 		return nil, err
 	}
 
@@ -122,7 +123,7 @@ func selectAllPastServiceOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, e
 
 	rows, err := db.Query(query, userID)
 	if err != nil {
-		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
+		log.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
 		return nil, err
 	}
 
@@ -137,7 +138,7 @@ func selectAllCurrentOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, error
 
 	rows, err := db.Query(query, userID)
 	if err != nil {
-		fmt.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
+		log.Println("error while selecting from service_order_table by user_id and status: " + err.Error())
 		return nil, err
 	}
 
@@ -155,7 +156,7 @@ func scanServiceOrders(rows *sql.Rows) ([]ServiceOrder, error) {
 
 		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng, &serviceOrder.ServiceName)
 		if err != nil {
-			fmt.Println("error while scanning service_orders: " + err.Error())
+			log.Println("error while scanning service_orders: " + err.Error())
 			return nil, err
 		}
 
@@ -190,9 +191,9 @@ func updateServiceOrderStatus(db *sql.DB, serviceOrderID int, status ServiceOrde
 	query := "UPDATE service_order_table SET status = $1 WHERE service_order_id = $2"
 	result, err := db.Exec(query, string(status), serviceOrderID)
 	if err != nil {
-		fmt.Println("error updating service order status: " + err.Error())
+		log.Println("error updating service order status: " + err.Error())
 		if pqErr, ok := err.(pq.Error); ok {
-			fmt.Println(pqErr.Error())
+			log.Println(pqErr.Error())
 		}
 
 		return err
@@ -200,12 +201,12 @@ func updateServiceOrderStatus(db *sql.DB, serviceOrderID int, status ServiceOrde
 
 	rowsAffectes, err := result.RowsAffected()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 
 	if rowsAffectes == 0 {
-		fmt.Println("now rows affected")
+		log.Println("now rows affected")
 		return ErrNoRowsAffected
 	}
 

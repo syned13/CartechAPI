@@ -2,18 +2,28 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/CartechAPI/auth"
 	"github.com/CartechAPI/order"
 	"github.com/CartechAPI/service"
+	"github.com/didip/tollbooth"
+	"github.com/didip/tollbooth/limiter"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
 	"github.com/subosito/gotenv"
+)
+
+var (
+	// create a 1 request/second limiter and
+	// every token bucket in it will expire 1 hour after it was initially set.
+	defaultLimiter = tollbooth.NewLimiter(1, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Hour})
+
+	loginLimiter = tollbooth.NewLimiter(0.4, &limiter.ExpirableOptions{DefaultExpirationTTL: time.Hour})
 )
 
 var port string
@@ -43,19 +53,28 @@ func main() {
 	}
 	defer channel.Close()
 
+	configureLimiters()
+
 	router := mux.NewRouter()
 	defineRoutes(db, channel, router)
 
-	fmt.Println("Listening on port", port)
+	log.Println("Listening on port", port)
+	// log.Println()
 	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+}
+
+func configureLimiters() {
+	defaultLimiter.SetIPLookups([]string{"RemoteAddr", "X-Forwarded-For", "X-Real-IP"})
+	loginLimiter.SetIPLookups([]string{"RemoteAddr", "X-Forwarded-For", "X-Real-IP"})
 }
 
 func defineRoutes(db *sql.DB, channel *amqp.Channel, router *mux.Router) {
 	router.HandleFunc("/", auth.Index()).Methods(http.MethodGet)
-	router.HandleFunc("/login", auth.Login(db)).Methods(http.MethodPost)
+
+	router.Handle("/login", tollbooth.LimitHandler(loginLimiter, auth.Login(db))).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
 
-	router.HandleFunc("/mechanic/signup", auth.MechanichSignUp(db)).Methods(http.MethodPost)
+	router.Handle("/mechanic/signup", tollbooth.LimitHandler(defaultLimiter, auth.MechanichSignUp(db))).Methods(http.MethodPost)
 	router.HandleFunc("/mechanic/login", auth.MechanicLogin(db)).Methods(http.MethodPost)
 
 	router.HandleFunc("/service", service.GetAllServices(db)).Methods(http.MethodGet)

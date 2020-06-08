@@ -2,7 +2,7 @@ package user
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 
 	"github.com/CartechAPI/shared"
 	"github.com/lib/pq"
@@ -27,13 +27,12 @@ const uniqueViolationCode = "23505"
 // GetUserByEmail searchs for an user by its email and returns it
 func GetUserByEmail(db *sql.DB, username string) (*User, error) {
 	user := User{}
-
-	fmt.Println(username)
 	query := "SELECT * FROM user_table WHERE email = $1;"
+
 	err := db.QueryRow(query, username).Scan(&user.UserID, &user.Name, &user.LastName, &user.Email, &user.Password, &user.PhoneNumber)
-	fmt.Println(err)
+	log.Println(err)
 	if err != nil && err != sql.ErrNoRows {
-		fmt.Println("failed_to_get_user: " + err.Error())
+		log.Println("failed_to_get_user: " + err.Error())
 		return nil, err
 	}
 
@@ -61,6 +60,6 @@ func InsertUser(db *sql.DB, user *User) (*User, error) {
 		return nil, err
 	}
 
-	fmt.Println(user)
+	log.Println(user)
 	return user, nil
 }

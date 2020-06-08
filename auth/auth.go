@@ -2,7 +2,6 @@ package auth
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -133,7 +132,7 @@ func GenerateToken(id int, clientType shared.ClientType) (string, error) {
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
 	if err != nil {
-		fmt.Println("error_signing_token: " + err.Error())
+		log.Println("error_signing_token: " + err.Error())
 		return "", err
 	}
 
@@ -150,7 +149,7 @@ func GenerateMechanicToken(mechanic mec.Mechanic) (string, error) {
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))
 	if err != nil {
-		fmt.Println("error_signing_token: " + err.Error())
+		log.Println("error_signing_token: " + err.Error())
 		return "", err
 	}
 
@@ -176,6 +175,9 @@ func UserAuthenticationMiddleware(r *http.Request) (shared.ClientType, int, erro
 func isPasswordCorrect(enteredPassword string, storedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(enteredPassword), []byte(storedPassword))
 	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return false
+	}
+	if err != nil {
 		return false
 	}
 

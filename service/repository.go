@@ -2,14 +2,14 @@ package service
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 )
 
 func getServicesByCategoryID(db *sql.DB, categoryID int) ([]Service, error) {
 	query := "SELECT * FROM service_table WHERE service_category_id = $1"
 	rows, err := db.Query(query, categoryID)
 	if err != nil {
-		fmt.Println("error_while_executing_query: ", err.Error())
+		log.Println("error_while_executing_query: ", err.Error())
 		return nil, err
 	}
 
@@ -21,7 +21,7 @@ func getServicesByCategoryID(db *sql.DB, categoryID int) ([]Service, error) {
 		service := Service{}
 		err = rows.Scan(&service.ServiceID, &service.ServiceName, &service.ServiceCategoryID)
 		if err != nil {
-			fmt.Println("error_while_scanning_row_service_table: ", err.Error())
+			log.Println("error_while_scanning_row_service_table: ", err.Error())
 			return nil, err
 		}
 
@@ -35,7 +35,7 @@ func getCategoryByID(db *sql.DB, categoryID int) (*Category, error) {
 	query := "SELECT * FROM service_category_table WHERE service_category_id = $1"
 	rows, err := db.Query(query, categoryID)
 	if err != nil {
-		fmt.Println("error_while_executing_query: ", err.Error())
+		log.Println("error_while_executing_query: ", err.Error())
 		return nil, err
 	}
 
@@ -46,7 +46,7 @@ func getCategoryByID(db *sql.DB, categoryID int) (*Category, error) {
 	rows.Next()
 	err = rows.Scan(&category.ServiceCategoryID, &category.ServiceCategory)
 	if err != nil {
-		fmt.Println("error_while_scanning_row_service_category_table: ", err.Error())
+		log.Println("error_while_scanning_row_service_category_table: ", err.Error())
 		return nil, err
 	}
 
@@ -58,7 +58,7 @@ func getAllServiceCategories(db *sql.DB) ([]Category, error) {
 	query := "SELECT * FROM service_category_table"
 	rows, err := db.Query(query)
 	if err != nil {
-		fmt.Println("error_while_executing_query: ", err.Error())
+		log.Println("error_while_executing_query: ", err.Error())
 		return nil, err
 	}
 
@@ -70,7 +70,7 @@ func getAllServiceCategories(db *sql.DB) ([]Category, error) {
 		serviceCategory := Category{}
 		err = rows.Scan(&serviceCategory.ServiceCategoryID, &serviceCategory.ServiceCategory)
 		if err != nil {
-			fmt.Println("error_while_scanning_row_service_category_table: ", err.Error())
+			log.Println("error_while_scanning_row_service_category_table: ", err.Error())
 			return nil, err
 		}
 
@@ -88,7 +88,7 @@ func scanServices(rows *sql.Rows) ([]Service, error) {
 		service := Service{}
 		err = rows.Scan(&service.ServiceID, &service.ServiceName, &service.ServiceCategoryID)
 		if err != nil {
-			fmt.Println("error_while_scanning_row_service_table: ", err.Error())
+			log.Println("error_while_scanning_row_service_table: ", err.Error())
 			return nil, err
 		}
 

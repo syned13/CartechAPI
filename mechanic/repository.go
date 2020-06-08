@@ -2,7 +2,7 @@ package mechanic
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 
 	"github.com/CartechAPI/shared"
 	"github.com/lib/pq"
@@ -55,7 +55,7 @@ func GetMechanicByEmail(db *sql.DB, email string) (*Mechanic, error) {
 	mechanic := Mechanic{}
 	err := db.QueryRow(query, email).Scan(&mechanic.MechanicID, &mechanic.Name, &mechanic.LastName, &mechanic.Email, &mechanic.NationalID, &mechanic.Password, &mechanic.Score, &mechanic.Bio, &mechanic.PhoneNumber)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return nil, err
 	}
 

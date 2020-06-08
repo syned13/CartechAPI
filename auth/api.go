@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -115,6 +115,7 @@ func validateMechanicSignUpFields(mechanic mec.Mechanic) error {
 	return nil
 }
 
+// MechanicLogin is the login function for the mechanic
 func MechanicLogin(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		mechanic := mec.Mechanic{}
@@ -175,7 +176,7 @@ func MechanichSignUp(db *sql.DB) http.HandlerFunc {
 		defer r.Body.Close()
 		err := json.NewDecoder(r.Body).Decode(&mechanic)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}

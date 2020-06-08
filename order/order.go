@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -83,7 +82,7 @@ func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *Service
 func assignOrder(channel *amqp.Channel, order ServiceOrder) error {
 	marshalledOrder, err := json.Marshal(order)
 	if err != nil {
-		fmt.Println("failed_to_marshall_order:" + err.Error())
+		log.Println("failed_to_marshall_order:" + err.Error())
 		return err
 	}
 
