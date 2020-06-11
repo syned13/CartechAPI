@@ -22,3 +22,6 @@
 ### Go Patch ###
 /vendor/
 /Godeps/
+
+# directories
+credentials/

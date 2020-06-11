@@ -56,14 +56,14 @@ func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *Service
 		return err
 	}
 
-	serviceOrders, err := getServiceOrderByUserIDAndStatus(db, serviceOrder.UserID)
-	if err != nil {
-		return err
-	}
+	// serviceOrders, err := getServiceOrderByUserIDAndStatus(db, serviceOrder.UserID)
+	// if err != nil {
+	// 	return err
+	// }
 
-	if len(serviceOrders) > 0 {
-		return ErrMultipleServiceOrders
-	}
+	// if len(serviceOrders) > 0 {
+	// 	return ErrMultipleServiceOrders
+	// }
 
 	serviceOrder.Status = ServiceOrderStatusPending
 	err = insertServiceOrder(db, *serviceOrder)

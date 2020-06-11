@@ -153,8 +153,9 @@ func scanServiceOrders(rows *sql.Rows) ([]ServiceOrder, error) {
 		var mechanicID sql.NullInt64
 		var startedAt, finishedAt, cancelledAt sql.NullTime
 		var lat, lng sql.NullFloat64
+		var serviceName sql.NullString
 
-		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng, &serviceOrder.ServiceName)
+		err := rows.Scan(&serviceOrder.ServiceOrderID, &serviceOrder.ServiceID, &serviceOrder.UserID, &mechanicID, &serviceOrder.CreatedAt, &startedAt, &serviceOrder.Status, &finishedAt, &cancelledAt, &lat, &lng, &serviceName)
 		if err != nil {
 			log.Println("error while scanning service_orders: " + err.Error())
 			return nil, err
@@ -179,6 +180,10 @@ func scanServiceOrders(rows *sql.Rows) ([]ServiceOrder, error) {
 		if lat.Valid && lng.Valid {
 			serviceOrder.Lat = lat.Float64
 			serviceOrder.Lng = lng.Float64
+		}
+
+		if serviceName.Valid {
+			serviceOrder.ServiceName = serviceName.String
 		}
 
 		serviceOrders = append(serviceOrders, serviceOrder)

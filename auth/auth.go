@@ -173,10 +173,7 @@ func UserAuthenticationMiddleware(r *http.Request) (shared.ClientType, int, erro
 }
 
 func isPasswordCorrect(enteredPassword string, storedPassword string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(enteredPassword), []byte(storedPassword))
-	if err == bcrypt.ErrMismatchedHashAndPassword {
-		return false
-	}
+	err := bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(enteredPassword))
 	if err != nil {
 		return false
 	}

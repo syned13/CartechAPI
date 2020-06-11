@@ -108,8 +108,20 @@ func SignUp(db *sql.DB) http.HandlerFunc {
 }
 
 func validateMechanicSignUpFields(mechanic mec.Mechanic) error {
-	if mechanic.Name == "" || mechanic.LastName == "" || mechanic.Email == "" || mechanic.NationalID == "" || mechanic.PhoneNumber == "" || mechanic.Password == "" {
-		return ErrMissingFields
+	if mechanic.Name == "" {
+		return ErrMissingName
+	}
+	if mechanic.LastName == "" {
+		return ErrMissingLastName
+	}
+	if mechanic.Email == "" {
+		return ErrMissingEmail
+	}
+	if mechanic.PhoneNumber == "" {
+		return ErrMissingPhoneNumber
+	}
+	if mechanic.Password == "" {
+		return ErrMissingPassword
 	}
 
 	return nil
@@ -146,7 +158,6 @@ func MechanicLogin(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err = bcrypt.CompareHashAndPassword([]byte(retrievedMechanic.Password), []byte(mechanic.Password))
 		if !isPasswordCorrect(mechanic.Password, retrievedMechanic.Password) {
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid password")
 			return

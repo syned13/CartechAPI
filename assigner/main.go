@@ -3,11 +3,13 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
-	"time"
 
+	"github.com/CartechAPI/notifications"
 	"github.com/CartechAPI/order"
+	"github.com/CartechAPI/user"
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
 	"github.com/subosito/gotenv"
@@ -52,30 +54,42 @@ func main() {
 	forever := make(chan bool)
 	go func() {
 		for d := range msgs {
-			err := assignOrder(d.Body)
+			log.Println("Received a message:" + string(d.Body))
+
+			err := assignOrder(db, d.Body)
 			if err != nil {
 				log.Println("error_handling_message: " + err.Error())
 			}
 
-			log.Println("Received a message:" + string(d.Body))
-			time.Sleep(2 * time.Second)
+			// time.Sleep(2 * time.Second)
 			log.Println("Done")
 		}
 	}()
 
-	<-forever
+	// Receive from channel and assign to value
+	value := <-forever
+	fmt.Println(value)
 }
 
-func assignOrder(messageBody []byte) error {
+func assignOrder(db *sql.DB, messageBody []byte) error {
 	serviceOrder := order.ServiceOrder{}
 	err := json.Unmarshal(messageBody, &serviceOrder)
 	if err != nil {
 		return err
 	}
 
+	usr, err := user.GetUserByID(db, serviceOrder.UserID)
+	if err != nil {
+		return err
+	}
+
+	log.Print("user: ")
+	log.Println(usr)
+
+	log.Print("service_order: ")
 	log.Println(serviceOrder)
 
-	return nil
+	return notifications.SendNotificationToMechanics("¡Nueva orden!", "Hay una nueva orden disponible")
 }
 
 func failOnError(err error, msg string) {
