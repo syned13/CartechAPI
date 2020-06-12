@@ -33,3 +33,11 @@ type ServiceOrder struct {
 	Lat            float64            `json:"lat"`
 	Lng            float64            `json:"lng"`
 }
+
+var ValidServiceOrderStatus = map[ServiceOrderStatus]bool{
+	ServiceOrderStatusCancelled:  true,
+	ServiceOrderStatusFailure:    true,
+	ServiceOrderStatusFinished:   true,
+	ServiceOrderStatusPending:    true,
+	ServiceOrderStatusInProgress: true,
+}

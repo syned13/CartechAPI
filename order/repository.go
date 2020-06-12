@@ -115,6 +115,21 @@ func selectAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 	return scanServiceOrders(rows)
 }
 
+func selectAllOrdersByStatus(db *sql.DB, status ServiceOrderStatus) ([]ServiceOrder, error) {
+	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id
+	WHERE status = $1`
+
+	rows, err := db.Query(query, status)
+	if err != nil {
+		log.Println("error while selecting all service_order by status: " + err.Error())
+		return nil, err
+	}
+
+	return scanServiceOrders(rows)
+}
+
 func selectAllPastServiceOrdersByUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
 	query := fmt.Sprintf(`SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
 	FROM service_order_table 

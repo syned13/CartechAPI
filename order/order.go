@@ -25,6 +25,8 @@ var (
 	ErrMissingLongitude = shared.NewBadRequestError("missing service location longitude")
 	// ErrMultipleServiceOrders multiple service orders
 	ErrMultipleServiceOrders = shared.NewBadRequestError("user is not allowed to have more than one service")
+	// ErrInvalidStatus invalid status
+	ErrInvalidStatus = shared.NewBadRequestError("invalid status")
 )
 
 // AssignerQueue assigner queue
@@ -138,13 +140,36 @@ func replaceOnServiceOrder(db *sql.DB, serviceOrderID int, toReplace string, new
 	return nil
 }
 
-func getAllServiceOrders(db *sql.DB, token string) ([]ServiceOrder, error) {
+func isServiceOrderStatusValid(status ServiceOrderStatus) bool {
+	if _, ok := ValidServiceOrderStatus[status]; ok {
+		return true
+	}
+
+	return false
+}
+
+func getAllServiceOrders(db *sql.DB, token string, status string) ([]ServiceOrder, error) {
+	if !isServiceOrderStatusValid(ServiceOrderStatus(status)) && status != "" {
+		return nil, ErrInvalidStatus
+	}
+
+	var err error
+	serviceOrders := []ServiceOrder{}
+
+	if status != "" {
+		serviceOrders, err = selectAllOrdersByStatus(db, ServiceOrderStatus(status))
+		if err != nil {
+			return nil, err
+		}
+
+		return serviceOrders, nil
+	}
+
+	// TODO: move this to another function to filter by user
 	clientType, id, err := utils.DecodeToken(token)
 	if err != nil {
 		return nil, err
 	}
-
-	serviceOrders := []ServiceOrder{}
 
 	if clientType == shared.ClientTypeUser {
 		serviceOrders, err = selectAllOrdersFromUser(db, id)

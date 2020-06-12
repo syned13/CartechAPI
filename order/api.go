@@ -57,7 +57,9 @@ func GetAllServiceOrders(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		serviceOrders, err := getAllServiceOrders(db, token)
+		status := r.URL.Query().Get("status")
+
+		serviceOrders, err := getAllServiceOrders(db, token, status)
 		if err != nil {
 			log.Println(err.Error())
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")

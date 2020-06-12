@@ -13,6 +13,7 @@ require (
 	github.com/lib/pq v1.6.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/streadway/amqp v0.0.0-20200108173154-1c71cc93ed71
+	github.com/stretchr/testify v1.4.0
 	github.com/subosito/gotenv v1.2.0
 	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
