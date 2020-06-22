@@ -143,8 +143,9 @@ func GenerateToken(id int, clientType shared.ClientType) (string, error) {
 func GenerateMechanicToken(mechanic mec.Mechanic) (string, error) {
 	now := time.Now()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"mechanic_id": mechanic.MechanicID,
-		"iat":         now.String(),
+		"id":   mechanic.MechanicID,
+		"type": shared.ClientTypeMechanic,
+		"iat":  now.String(),
 	})
 
 	signedToken, err := token.SignedString([]byte(os.Getenv("SECRET")))

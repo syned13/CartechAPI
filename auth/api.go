@@ -165,7 +165,7 @@ func MechanicLogin(db *sql.DB) http.HandlerFunc {
 
 		retrievedMechanic.Password = ""
 
-		token, err := GenerateMechanicToken(*retrievedMechanic)
+		token, err := GenerateToken(retrievedMechanic.MechanicID, shared.ClientTypeMechanic)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
@@ -180,6 +180,7 @@ func MechanicLogin(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// MechanichSignUp the sign up for the mechanic
 func MechanichSignUp(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		mechanic := mec.Mechanic{}

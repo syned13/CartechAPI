@@ -18,7 +18,7 @@ import (
 // CreateServiceOrder receives the request to create a service request
 func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		serviceOrder := ServiceOrder{}
+		serviceOrder := &ServiceOrder{}
 		// TODO: shouldnt we use the user id from the jwt?
 		_, _, err := auth.UserAuthenticationMiddleware(r)
 		if err != nil {
@@ -32,7 +32,7 @@ func CreateServiceOrder(db *sql.DB, channel *amqp.Channel) http.HandlerFunc {
 			return
 		}
 
-		err = createServiceOrder(db, channel, &serviceOrder)
+		serviceOrder, err = createServiceOrder(db, channel, serviceOrder)
 		if err, ok := err.(shared.PublicError); ok {
 			showableError := err.(shared.ShowableError)
 			utils.RespondWithError(w, showableError.StatusCode, showableError.Message)
@@ -183,5 +183,37 @@ func UpdateServiceOrder(db *sql.DB) http.HandlerFunc {
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
+	}
+}
+
+// AssignMechanicToOrder assings a mechanic to an order
+func AssignMechanicToOrder(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		mechanicIDS := r.URL.Query().Get("mechanic_id")
+		if mechanicIDS == "" {
+			utils.RespondWithError(w, http.StatusBadRequest, "missing mechanic id")
+			return
+		}
+
+		mechanicID, err := strconv.Atoi(mechanicIDS)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid mechanic id")
+			return
+		}
+
+		params := mux.Vars(r)
+		orderID, err := strconv.Atoi(params["order_id"])
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid order id")
+			return
+		}
+
+		err = assignMechanicToOrder(db, mechanicID, orderID)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, 200, "ok")
 	}
 }

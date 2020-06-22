@@ -52,10 +52,10 @@ func validateServiceOrderFields(serviceOrder ServiceOrder) error {
 	return nil
 }
 
-func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *ServiceOrder) error {
+func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *ServiceOrder) (*ServiceOrder, error) {
 	err := validateServiceOrderFields(*serviceOrder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// serviceOrders, err := getServiceOrderByUserIDAndStatus(db, serviceOrder.UserID)
@@ -68,17 +68,19 @@ func createServiceOrder(db *sql.DB, channel *amqp.Channel, serviceOrder *Service
 	// }
 
 	serviceOrder.Status = ServiceOrderStatusPending
-	err = insertServiceOrder(db, *serviceOrder)
+	id, err := insertServiceOrder(db, *serviceOrder)
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	serviceOrder.ServiceOrderID = id
 
 	err = assignOrder(channel, *serviceOrder)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return serviceOrder, nil
 }
 
 func assignOrder(channel *amqp.Channel, order ServiceOrder) error {
@@ -212,4 +214,8 @@ func getAllCurrentOrders(db *sql.DB, clientType shared.ClientType, id int) ([]Se
 	}
 
 	return nil, errors.New("not yet implemented")
+}
+
+func assignMechanicToOrder(db *sql.DB, mechanicID int, orderID int) error {
+	return setOrderMechanic(db, orderID, mechanicID)
 }

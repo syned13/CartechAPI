@@ -16,15 +16,20 @@ var (
 	ErrNoRowsAffected = errors.New("no rows affected")
 )
 
-func insertServiceOrder(db *sql.DB, serviceOrder ServiceOrder) error {
-	query := "INSERT INTO service_order_table (service_id, user_id, created_at, status, lat, lng) VALUES ($1, $2, NOW(), $3, $4, $5)"
-	_, err := db.Exec(query, serviceOrder.ServiceID, serviceOrder.UserID, serviceOrder.Status, serviceOrder.Lat, serviceOrder.Lng)
+func insertServiceOrder(db *sql.DB, serviceOrder ServiceOrder) (int, error) {
+	query := `INSERT INTO service_order_table 
+				(service_id, user_id, created_at, status, lat, lng) 
+				VALUES ($1, $2, NOW(), $3, $4, $5) 
+				RETURNING service_order_id`
+
+	id := 0
+	err := db.QueryRow(query, serviceOrder.ServiceID, serviceOrder.UserID, serviceOrder.Status, serviceOrder.Lat, serviceOrder.Lng).Scan(&id)
 	if err != nil {
 		log.Println("error inserting into service_order: " + err.Error())
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func getServiceOrderByUserIDAndStatus(db *sql.DB, userID int) ([]ServiceOrder, error) {
@@ -216,6 +221,31 @@ func updateServiceOrderStatus(db *sql.DB, serviceOrderID int, status ServiceOrde
 			log.Println(pqErr.Error())
 		}
 
+		return err
+	}
+
+	rowsAffectes, err := result.RowsAffected()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if rowsAffectes == 0 {
+		log.Println("now rows affected")
+		return ErrNoRowsAffected
+	}
+
+	return nil
+}
+
+func setOrderMechanic(db *sql.DB, orderID int, mechanicID int) error {
+	query := `UPDATE service_order_table
+			SET mechanic_id = $1, status = $2
+			WHERE service_order_id = $3`
+
+	result, err := db.Exec(query, mechanicID, ServiceOrderStatusInProgress, orderID)
+	if err != nil {
+		log.Println("assigning_mechanic_to_order_failed: " + err.Error())
 		return err
 	}
 

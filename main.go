@@ -87,4 +87,5 @@ func defineRoutes(db *sql.DB, channel *amqp.Channel, router *mux.Router) {
 	router.Handle("/order/current", order.GetAllCurrentOrders(db)).Methods(http.MethodGet)
 	router.HandleFunc("/order/{order_id}", order.UpdateServiceOrder(db)).Methods(http.MethodPatch)
 	router.HandleFunc("/order/{order_id}", order.GetServiceOrder(db)).Methods(http.MethodGet)
+	router.HandleFunc("/order/{order_id}/mechanic", order.AssignMechanicToOrder(db)).Methods(http.MethodPut)
 }
