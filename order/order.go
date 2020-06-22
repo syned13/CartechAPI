@@ -181,7 +181,7 @@ func getAllServiceOrders(db *sql.DB, token string, status string) ([]ServiceOrde
 	}
 
 	if clientType == shared.ClientTypeAdmin {
-		serviceOrders, err = selectAllOrders(db)
+		serviceOrders, err = selectAllOrdersFromMechanic(db, id)
 		if err != nil {
 			return nil, err
 		}

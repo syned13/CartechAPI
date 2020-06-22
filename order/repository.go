@@ -105,6 +105,21 @@ func selectAllOrdersFromUser(db *sql.DB, userID int) ([]ServiceOrder, error) {
 	return scanServiceOrders(rows)
 }
 
+func selectAllOrdersFromMechanic(db *sql.DB, mechanicID int) ([]ServiceOrder, error) {
+	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
+	FROM service_order_table 
+	LEFT JOIN service_table ON service_order_table.service_id = service_table.service_id
+	WHERE mechanic_id = $1`
+
+	rows, err := db.Query(query, mechanicID)
+	if err != nil {
+		log.Println("error while selecting mechanic service_order: " + err.Error())
+		return nil, err
+	}
+
+	return scanServiceOrders(rows)
+}
+
 // TODO: paginate this
 func selectAllOrders(db *sql.DB) ([]ServiceOrder, error) {
 	query := `SELECT service_order_id, service_order_table.service_id, user_id, mechanic_id, created_at, started_at, status, finished_at, cancelled_at, lat, lng, display_name
