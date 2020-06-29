@@ -7,6 +7,7 @@ This is the backend service that serves the Cartech mobile apps.
 ## Technologies used
 - PostgresSql
 - RabbitMq
+- Worker dynos/bakcground jobs
 - FirebaseMessaging
 - Mux router
 - Heroku
