@@ -9,6 +9,7 @@ This is the backend service that serves the Cartech mobile apps.
 - RabbitMq
 - FirebaseMessaging
 - Mux router
+- Heroku
 
 
 You can see check the apps:
