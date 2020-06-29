@@ -12,6 +12,7 @@ import (
 	"github.com/CartechAPI/service"
 	"github.com/didip/tollbooth"
 	"github.com/didip/tollbooth/limiter"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
@@ -58,9 +59,11 @@ func main() {
 	router := mux.NewRouter()
 	defineRoutes(db, channel, router)
 
+	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
+
 	log.Println("Listening on port", port)
 	// log.Println()
-	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), loggedRouter))
 }
 
 func configureLimiters() {
@@ -73,6 +76,7 @@ func defineRoutes(db *sql.DB, channel *amqp.Channel, router *mux.Router) {
 
 	router.Handle("/login", tollbooth.LimitHandler(loginLimiter, auth.Login(db))).Methods(http.MethodPost)
 	router.HandleFunc("/signup", auth.SignUp(db)).Methods(http.MethodPost)
+	router.Handle("/session", auth.StoreSession(db)).Methods(http.MethodPost)
 
 	router.Handle("/mechanic/signup", tollbooth.LimitHandler(defaultLimiter, auth.MechanichSignUp(db))).Methods(http.MethodPost)
 	router.HandleFunc("/mechanic/login", auth.MechanicLogin(db)).Methods(http.MethodPost)

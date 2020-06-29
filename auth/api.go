@@ -219,3 +219,46 @@ func MechanichSignUp(db *sql.DB) http.HandlerFunc {
 		}
 	}
 }
+
+func validateSessionFields(session Session) error {
+	if session.UserID == 0 {
+		return errors.New("missing user id")
+	}
+
+	if session.Token == "" {
+		return errors.New("missing token")
+	}
+
+	if session.UserType == "" {
+		return errors.New("missing user type")
+	}
+
+	return nil
+}
+
+// StoreSession handles the request for storing a session
+func StoreSession(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session := &Session{}
+
+		err := json.NewDecoder(r.Body).Decode(session)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, "invalid user body")
+			return
+		}
+
+		err = validateSessionFields(*session)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		session, err = saveSession(db, *session)
+		if err != nil {
+			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+			return
+		}
+
+		utils.RespondJSON(w, http.StatusCreated, session)
+	}
+}

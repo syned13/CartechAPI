@@ -210,6 +210,7 @@ func AssignMechanicToOrder(db *sql.DB) http.HandlerFunc {
 
 		err = assignMechanicToOrder(db, mechanicID, orderID)
 		if err != nil {
+			log.Println(err.Error())
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}

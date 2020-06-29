@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/CartechAPI/auth"
+	"github.com/CartechAPI/notifications"
 	"github.com/CartechAPI/shared"
 	"github.com/CartechAPI/utils"
 	"github.com/streadway/amqp"
@@ -217,5 +219,25 @@ func getAllCurrentOrders(db *sql.DB, clientType shared.ClientType, id int) ([]Se
 }
 
 func assignMechanicToOrder(db *sql.DB, mechanicID int, orderID int) error {
-	return setOrderMechanic(db, orderID, mechanicID)
+	err := setOrderMechanic(db, orderID, mechanicID)
+	if err != nil {
+		return err
+	}
+
+	order, err := getServiceOrderByID(db, orderID)
+	if err != nil {
+		return err
+	}
+
+	session, err := auth.GetLastSession(db, order.UserID)
+	if err != nil {
+		return err
+	}
+
+	err = notifications.SendNotificationToSingleUser(session.Token, "Un mecanico ha tomado tu orden", "Tu orden ha sido tomada por un mecanico y pronto estara iniciando")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
